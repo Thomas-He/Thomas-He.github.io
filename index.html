@@ -93,7 +93,7 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="浅析-CAS"><a href="#浅析-CAS" class="headerlink" title="浅析 CAS"></a>浅析 CAS</h2><p>上一篇文章我们分析了可见性和重排序对程序正确性的影响，并且举了个计数器的例子。那是否保证了可见性，限制重排序之后，程序就不会出问题了呢？如下代码所示，我们声明 count 变量为 volatile 类型，根据 happens-before 规则中的 volatile variable rule 可知，对 count 变量的写入 happens-before 随后对 count 变量的读取。那么该程序是不是就没问题了呢？运行之后，我们发现每次的结果依然是小于等于 20000，且每次的结果都可能不一样。那么问题出在哪呢？</p>
+        <p>上一篇文章我们分析了可见性和重排序对程序正确性的影响，并且举了个计数器的例子。那是否保证了可见性，限制重排序之后，程序就不会出问题了呢？如下代码所示，我们声明 count 变量为 volatile 类型，根据 happens-before 规则中的 volatile variable rule 可知，对 count 变量的写入 happens-before 随后对 count 变量的读取。那么该程序是不是就没问题了呢？运行之后，我们发现每次的结果依然是小于等于 20000，且每次的结果都可能不一样。那么问题出在哪呢？</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NoAtomicity</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">volatile</span> <span class="keyword">static</span> <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        Thread t1 = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++) &#123;</span><br><span class="line">                count++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        Thread t2 = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000</span>; i++) &#123;</span><br><span class="line">                count++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        t1.start(); t2.start();</span><br><span class="line">        t1.join(); t2.join();</span><br><span class="line">        System.out.println(count);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>原因是 count++ 这个操作并不是原子的，这是一个典型的 read-modify-write 操作。如果出现下图所示的调度，线程 A 和 线程 B 都对 count 进行了自增操作，但 count 的最终结果是 1，出现了更新丢失。所以仅仅保证可见性，限制重排序是不足以保证程序正确的，我们还需要保证原子性。</p>
@@ -155,7 +155,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2021/09/08/%E6%B5%85%E6%9E%90CAS/" data-id="cktc0av120007mp9k88kg8tdp" data-title="浅析CAS" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2021/09/08/%E6%B5%85%E6%9E%90CAS/" data-id="cktc2anoz0007a59kfqophusr" data-title="浅析CAS" class="article-share-link">Share</a>
       
       
       
@@ -191,7 +191,7 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="从Java程序员的角度谈谈JMM"><a href="#从Java程序员的角度谈谈JMM" class="headerlink" title="从Java程序员的角度谈谈JMM"></a>从Java程序员的角度谈谈JMM</h2><p>Java 内存模型 (Java Memory Model, JMM) 很复杂，它涉及Java同步机制、编译器、JVM、CPU架构等多方面的内容。不同类别的程序员对 JMM 的关注重点自然是不一样的，这篇文章写的是一个普通 Java 程序员对 JMM 的理解。</p>
+        <p>Java 内存模型 (Java Memory Model, JMM) 很复杂，它涉及Java同步机制、编译器、JVM、CPU架构等多方面的内容。不同类别的程序员对 JMM 的关注重点自然是不一样的，这篇文章写的是一个普通 Java 程序员对 JMM 的理解。</p>
 <h3 id="1-为什么需要JMM"><a href="#1-为什么需要JMM" class="headerlink" title="1. 为什么需要JMM?"></a>1. 为什么需要JMM?</h3><h4 id="1-1-平台内存模型"><a href="#1-1-平台内存模型" class="headerlink" title="1.1 平台内存模型"></a>1.1 平台内存模型</h4><p>在共享内存的多处理器体系结构中，每个处理器都有自己的缓存，并且定期地与主内存进行同步。但是不同的处理器架构提供了不同程度的缓存一致性 (cache coherence)。关于缓存一致性，我们可以设想两个极端：一个是允许不同的处理器在任意时刻对内存中同一个变量的观察值可以不相同；另一个极端是确保每一个处理器在任一时刻都知道其余的处理器都在做些什么。显然，这两种极端情况都很不理想，绝大多数平台提供的缓存一致性都位于这两者之间，并且还提供了一些指令来加强缓存和主内存的协同，这些指令我们称之为内存屏障 (memory barriers or fences)。</p>
 <p>为了使 Java 程序员不需要关心不同架构之间内存模型上的差异，Java 提出了自己的内存模型。JVM 通过在合适的位置插入内存屏障，弥补了 JMM 和底层平台内存模型之间的差异。</p>
 <h4 id="1-2-可见性"><a href="#1-2-可见性" class="headerlink" title="1.2 可见性"></a>1.2 可见性</h4><p>假如一个线程 A 为变量 variable 赋值<code>variable = 3</code>，在缺少同步的情况下，另一个线程 B 可能无法立即看到线程 A 的操作，甚至是永远也看不到。原因有许多，比如缓存未刷新到主内存，又或者是线程 B 关于 variable 的缓存未失效。举个例子，来看看可见性对程序正确性的影响。</p>
@@ -263,7 +263,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2021/09/07/%E4%BB%8EJava%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E8%A7%92%E5%BA%A6%E8%B0%88%E8%B0%88JMM/" data-id="cktc0av0s0000mp9k9nve3gqp" data-title="从Java程序员的角度谈谈JMM" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2021/09/07/%E4%BB%8EJava%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E8%A7%92%E5%BA%A6%E8%B0%88%E8%B0%88JMM/" data-id="cktc2anoq0000a59k66c8cdfh" data-title="从Java程序员的角度谈谈JMM" class="article-share-link">Share</a>
       
       
       

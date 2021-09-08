@@ -6,15 +6,15 @@
   
   <title>从Java程序员的角度谈谈JMM | Thomas-He</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="从Java程序员的角度谈谈JMMJava 内存模型 (Java Memory Model, JMM) 很复杂，它涉及Java同步机制、编译器、JVM、CPU架构等多方面的内容。不同类别的程序员对 JMM 的关注重点自然是不一样的，这篇文章写的是一个普通 Java 程序员对 JMM 的理解。 1. 为什么需要JMM?1.1 平台内存模型在共享内存的多处理器体系结构中，每个处理器都有自己的缓存，并且定">
+  <meta name="description" content="Java 内存模型 (Java Memory Model, JMM) 很复杂，它涉及Java同步机制、编译器、JVM、CPU架构等多方面的内容。不同类别的程序员对 JMM 的关注重点自然是不一样的，这篇文章写的是一个普通 Java 程序员对 JMM 的理解。 1. 为什么需要JMM?1.1 平台内存模型在共享内存的多处理器体系结构中，每个处理器都有自己的缓存，并且定期地与主内存进行同步。但是不同的">
 <meta property="og:type" content="article">
 <meta property="og:title" content="从Java程序员的角度谈谈JMM">
 <meta property="og:url" content="http://example.com/2021/09/07/%E4%BB%8EJava%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E8%A7%92%E5%BA%A6%E8%B0%88%E8%B0%88JMM/index.html">
 <meta property="og:site_name" content="Thomas-He">
-<meta property="og:description" content="从Java程序员的角度谈谈JMMJava 内存模型 (Java Memory Model, JMM) 很复杂，它涉及Java同步机制、编译器、JVM、CPU架构等多方面的内容。不同类别的程序员对 JMM 的关注重点自然是不一样的，这篇文章写的是一个普通 Java 程序员对 JMM 的理解。 1. 为什么需要JMM?1.1 平台内存模型在共享内存的多处理器体系结构中，每个处理器都有自己的缓存，并且定">
+<meta property="og:description" content="Java 内存模型 (Java Memory Model, JMM) 很复杂，它涉及Java同步机制、编译器、JVM、CPU架构等多方面的内容。不同类别的程序员对 JMM 的关注重点自然是不一样的，这篇文章写的是一个普通 Java 程序员对 JMM 的理解。 1. 为什么需要JMM?1.1 平台内存模型在共享内存的多处理器体系结构中，每个处理器都有自己的缓存，并且定期地与主内存进行同步。但是不同的">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-09-07T11:02:12.000Z">
-<meta property="article:modified_time" content="2021-09-08T15:28:32.718Z">
+<meta property="article:modified_time" content="2021-09-08T22:16:25.842Z">
 <meta property="article:author" content="Thomas-He">
 <meta property="article:tag" content="Java">
 <meta property="article:tag" content="JMM">
@@ -98,7 +98,7 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="从Java程序员的角度谈谈JMM"><a href="#从Java程序员的角度谈谈JMM" class="headerlink" title="从Java程序员的角度谈谈JMM"></a>从Java程序员的角度谈谈JMM</h2><p>Java 内存模型 (Java Memory Model, JMM) 很复杂，它涉及Java同步机制、编译器、JVM、CPU架构等多方面的内容。不同类别的程序员对 JMM 的关注重点自然是不一样的，这篇文章写的是一个普通 Java 程序员对 JMM 的理解。</p>
+        <p>Java 内存模型 (Java Memory Model, JMM) 很复杂，它涉及Java同步机制、编译器、JVM、CPU架构等多方面的内容。不同类别的程序员对 JMM 的关注重点自然是不一样的，这篇文章写的是一个普通 Java 程序员对 JMM 的理解。</p>
 <h3 id="1-为什么需要JMM"><a href="#1-为什么需要JMM" class="headerlink" title="1. 为什么需要JMM?"></a>1. 为什么需要JMM?</h3><h4 id="1-1-平台内存模型"><a href="#1-1-平台内存模型" class="headerlink" title="1.1 平台内存模型"></a>1.1 平台内存模型</h4><p>在共享内存的多处理器体系结构中，每个处理器都有自己的缓存，并且定期地与主内存进行同步。但是不同的处理器架构提供了不同程度的缓存一致性 (cache coherence)。关于缓存一致性，我们可以设想两个极端：一个是允许不同的处理器在任意时刻对内存中同一个变量的观察值可以不相同；另一个极端是确保每一个处理器在任一时刻都知道其余的处理器都在做些什么。显然，这两种极端情况都很不理想，绝大多数平台提供的缓存一致性都位于这两者之间，并且还提供了一些指令来加强缓存和主内存的协同，这些指令我们称之为内存屏障 (memory barriers or fences)。</p>
 <p>为了使 Java 程序员不需要关心不同架构之间内存模型上的差异，Java 提出了自己的内存模型。JVM 通过在合适的位置插入内存屏障，弥补了 JMM 和底层平台内存模型之间的差异。</p>
 <h4 id="1-2-可见性"><a href="#1-2-可见性" class="headerlink" title="1.2 可见性"></a>1.2 可见性</h4><p>假如一个线程 A 为变量 variable 赋值<code>variable = 3</code>，在缺少同步的情况下，另一个线程 B 可能无法立即看到线程 A 的操作，甚至是永远也看不到。原因有许多，比如缓存未刷新到主内存，又或者是线程 B 关于 variable 的缓存未失效。举个例子，来看看可见性对程序正确性的影响。</p>
@@ -170,7 +170,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2021/09/07/%E4%BB%8EJava%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E8%A7%92%E5%BA%A6%E8%B0%88%E8%B0%88JMM/" data-id="cktc0av0s0000mp9k9nve3gqp" data-title="从Java程序员的角度谈谈JMM" class="article-share-link">Share</a>
+      <a data-url="http://example.com/2021/09/07/%E4%BB%8EJava%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E8%A7%92%E5%BA%A6%E8%B0%88%E8%B0%88JMM/" data-id="cktc2anoq0000a59k66c8cdfh" data-title="从Java程序员的角度谈谈JMM" class="article-share-link">Share</a>
       
       
       
